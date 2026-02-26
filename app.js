@@ -1,6 +1,7 @@
 // ==========================================
 // КОНФИГУРАЦИЯ
 // ==========================================
+// ВАЖНО: Убедись, что в конце ссылки стоит /?url=
 const PROXY = "https://loliland-proxy.orbs-bot.workers.dev/?url=";
 const API_BASE = 'https://loliland.ru/apiv2';
 const FALLBACK_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='%232a2a35'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23b142f5' font-family='sans-serif' font-size='24'>?</text></svg>";
@@ -8,24 +9,25 @@ const FALLBACK_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2
 let currentMode = 'dashboard';
 
 // ==========================================
-// СЕТЕВАЯ ЛОГИКА
+// ЕДИНАЯ ФУНКЦИЯ ЗАПРОСА
 // ==========================================
 async function request(endpoint) {
     const target = `${API_BASE}${endpoint}${endpoint.includes('?') ? '&' : '?'}_t=${Date.now()}`;
     try {
         const res = await fetch(PROXY + encodeURIComponent(target));
-        return res.ok ? await res.json() : null;
+        if (!res.ok) throw new Error(`Ошибка прокси: ${res.status}`);
+        return await res.json();
     } catch (e) {
-        console.error(`Ошибка запроса: ${endpoint}`, e);
+        console.error(`[API FAIL] ${endpoint}`, e);
         return null;
     }
 }
 
-// Функция получения ссылки на аватар через прокси
+// Ссылка на аватар через твой прокси
 const getAvatarUrl = (login) => PROXY + encodeURIComponent(`https://loliland.ru/avatar/${login}/64`);
 
 // ==========================================
-// УТИЛИТЫ
+// УТИЛИТЫ ФОРМАТИРОВАНИЯ
 // ==========================================
 const format = {
     time: (min) => {
@@ -33,7 +35,6 @@ const format = {
         return min >= 60 ? `${Math.floor(min/60)}ч ${min%60}м` : `${min}м`;
     },
     num: (n) => (n || 0).toLocaleString('ru-RU'),
-    date: (ts) => ts ? new Date(ts).toLocaleDateString('ru-RU') : '—',
     role: (role) => {
         const map = { curator: ['#f5a623', 'Куратор'], admin: ['#ff4444', 'Админ'], moderator: ['#ff8800', 'Модератор'] };
         return map[role] || ['#b142f5', 'Игрок'];
@@ -41,7 +42,7 @@ const format = {
 };
 
 // ==========================================
-// ЛОГИКА ОБНОВЛЕНИЯ UI
+// ЛОГИКА ОБНОВЛЕНИЯ ИНТЕРФЕЙСА
 // ==========================================
 function render(id, html) {
     const el = document.getElementById(id);
@@ -49,13 +50,13 @@ function render(id, html) {
 }
 
 function showSkeletons() {
-    render('card1', `<div class="skeleton sk-title-large"></div><div class="skeleton sk-subtitle"></div>`);
-    render('card2', `<div class="skeleton sk-title-med"></div>`);
-    render('card3', `<div class="skeleton sk-title-large"></div>`);
+    render('card1', `<div class="skeleton" style="height:40px;width:100px;"></div><div class="skeleton" style="height:20px;width:150px;margin-top:10px;"></div>`);
+    render('card2', `<div class="skeleton" style="height:60px;width:100%;"></div>`);
+    render('card3', `<div class="skeleton" style="height:20px;width:100%;"></div>`);
 }
 
 // ==========================================
-// ДАШБОРД
+// 1. ДАШБОРД (ГЛАВНАЯ)
 // ==========================================
 async function loadServerDashboard(isSilent = false) {
     if (isSilent && currentMode !== 'dashboard') return;
@@ -86,10 +87,12 @@ async function loadServerDashboard(isSilent = false) {
             <div><b>${tm}</b> / 1000 <p style="font-size: 10px; opacity: 0.5;">TechnoMagic RPG</p></div>
         </div>
     `);
+
+    render('card3', `<div style="font-size:12px;opacity:0.6;">Мониторинг обновлен: ${new Date().toLocaleTimeString()}</div>`);
 }
 
 // ==========================================
-// ПОИСК
+// 2. ПОИСК ИГРОКОВ
 // ==========================================
 const input = document.getElementById('playerInput');
 const drop = document.getElementById('searchResults');
@@ -99,20 +102,25 @@ input.oninput = async () => {
     if (q.length < 2) return drop.classList.remove('active');
 
     const res = await request(`/user/search?limit=5&login=${encodeURIComponent(q)}`);
-    const players = res?.users?.elements || res?.elements || [];
-
-    drop.innerHTML = players.map(p => `
-        <div class="search-item" onclick="loadPlayerProfile('${p.login}', '${p.uuid}')">
-            <img src="${getAvatarUrl(p.login)}" class="player-head" onerror="this.src='${FALLBACK_AVATAR}'">
-            <span>${p.login}</span>
-        </div>
-    `).join('') || '<div class="search-item">Никого не нашли</div>';
-
+    
+    // Пытаемся найти массив игроков в ответе LoliLand
+    const players = res?.users?.elements || res?.elements || (Array.isArray(res) ? res : []);
+    
+    if (players.length === 0) {
+        drop.innerHTML = '<div class="search-item">Никого не нашли</div>';
+    } else {
+        drop.innerHTML = players.map(p => `
+            <div class="search-item" onclick="loadPlayerProfile('${p.login}', '${p.uuid || p.id}')">
+                <img src="${getAvatarUrl(p.login)}" class="player-head" onerror="this.src='${FALLBACK_AVATAR}'">
+                <span>${p.login}</span>
+            </div>
+        `).join('');
+    }
     drop.classList.add('active');
 };
 
 // ==========================================
-// ПРОФИЛЬ ИГРОКА
+// 3. ПРОФИЛЬ ИГРОКА
 // ==========================================
 async function loadPlayerProfile(login, uuid) {
     currentMode = 'profile';
@@ -125,11 +133,12 @@ async function loadPlayerProfile(login, uuid) {
         request(`/user/profile/statistics/${uuid}`)
     ]);
 
-    // Расчет времени
-    const playtimeEntries = Object.entries(pt || {}).filter(([k]) => k.includes('-'));
-    const totalTime = playtimeEntries.reduce((s, [, v]) => s + (Number(v) || 0), 0);
+    // Суммируем время
+    const timeData = pt || {};
+    const totalTime = Object.entries(timeData)
+        .filter(([k]) => k.includes('-'))
+        .reduce((s, [, v]) => s + (Number(v) || 0), 0);
 
-    // Верстка профиля
     render('card1', `
         <div style="display:flex; align-items:center; gap:15px;">
             <img src="${getAvatarUrl(login)}" style="width:64px; border-radius:8px; border:2px solid var(--purple-glow);" onerror="this.src='${FALLBACK_AVATAR}'">
@@ -143,30 +152,38 @@ async function loadPlayerProfile(login, uuid) {
     render('card2', `
         <div style="text-align:center;">
             <div style="font-size:24px; font-weight:700; color:var(--purple-light);">${format.time(totalTime)}</div>
-            <p style="font-size:10px; opacity:0.5;">Онлайн за месяц</p>
+            <p style="font-size:10px; opacity:0.5;">Время за месяц</p>
         </div>
     `);
 
     const stats = st?.game || {};
     render('card3', `
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
-            <div class="stat-node"><span>Убийств</span><b>${format.num(stats.playersKilled)}</b></div>
-            <div class="stat-node"><span>Смертей</span><b>${format.num(stats.deaths)}</b></div>
-            <div class="stat-node"><span>Баланс</span><b>${format.num(st?.coins?.amount)}</b></div>
+            <div class="stat-node" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;text-align:center;">
+                <span style="font-size:9px;display:block;opacity:0.5;">Убийств</span>
+                <b>${format.num(stats.playersKilled)}</b>
+            </div>
+            <div class="stat-node" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;text-align:center;">
+                <span style="font-size:9px;display:block;opacity:0.5;">Смертей</span>
+                <b>${format.num(stats.deaths)}</b>
+            </div>
+            <div class="stat-node" style="background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;text-align:center;">
+                <span style="font-size:9px;display:block;opacity:0.5;">Баланс</span>
+                <b>${format.num(st?.coins?.amount)}</b>
+            </div>
         </div>
-        <button class="btn-return" onclick="loadServerDashboard()" style="margin-top:20px; width:100%;">← Назад</button>
+        <button class="btn-return" onclick="loadServerDashboard()" style="margin-top:20px; width:100%; background:var(--purple-glow); border:none; color:white; padding:8px; border-radius:5px; cursor:pointer;">← Назад</button>
     `);
 }
 
 // ==========================================
-// ЗАПУСК
+// СЛУШАТЕЛИ
 // ==========================================
 window.onload = () => {
     loadServerDashboard();
     setInterval(() => loadServerDashboard(true), 30000);
 };
 
-// Закрытие поиска по клику мимо
 document.onclick = (e) => {
     if (!input.contains(e.target) && !drop.contains(e.target)) drop.classList.remove('active');
 };
