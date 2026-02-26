@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Tech Nebula Panel</title>
+    <title>LoliLand Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -19,166 +19,99 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Orbitron', sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; position: relative; }
 
-        /* Эффекты фона (Звезды) */
+        /* Фон: Звезды и Эффекты */
         .background-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; background-image: radial-gradient(circle at 50% 50%, rgba(177, 66, 245, 0.08) 0%, transparent 60%); }
-        .stars-small { position: absolute; top: 0; left: 0; width: 1px; height: 1px; box-shadow: 10vw 20vh #fff, 20vw 50vh #fff, 30vw 10vh #fff, 40vw 80vh #fff, 50vw 30vh #fff, 60vw 60vh #fff, 70vw 20vh #fff, 80vw 90vh #fff, 90vw 40vh #fff, 95vw 15vh #fff, 15vw 70vh #fff, 45vw 45vh #fff, 75vw 75vh #fff, 85vw 5vh #fff, 5vw 95vh #fff, 25vw 85vh #fff, 12vw 34vh #fff, 67vw 23vh #fff, 88vw 55vh #fff, 33vw 77vh #fff; animation: twinkle 4s infinite alternate; }
+        .stars-small { position: absolute; top: 0; left: 0; width: 1px; height: 1px; box-shadow: 10vw 20vh #fff, 20vw 50vh #fff, 30vw 10vh #fff, 40vw 80vh #fff, 50vw 30vh #fff, 60vw 60vh #fff, 70vw 20vh #fff, 80vw 90vh #fff, 90vw 40vh #fff, 95vw 15vh #fff, 15vw 70vh #fff, 45vw 45vh #fff, 75vw 75vh #fff, 85vw 5vh #fff, 5vw 95vh #fff, 25vw 85vh #fff; animation: twinkle 4s infinite alternate; }
         .stars-large { position: absolute; top: 0; left: 0; width: 2px; height: 2px; box-shadow: 18vw 15vh #fff, 35vw 65vh #fff, 55vw 25vh #fff, 85vw 45vh #fff, 25vw 35vh #fff, 75vw 85vh #fff, 45vw 90vh #fff, 92vw 70vh #fff; animation: twinkle 2.5s infinite alternate-reverse; }
+        
         @keyframes twinkle { 0% { opacity: 0.2; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.2) drop-shadow(0 0 4px #fff); } }
 
-        /* =========================================
-           НОВЫЕ ЭМОДЗИ-РАКЕТЫ
-           ========================================= */
-        .rocket {
-            position: absolute;
-            opacity: 0.6;
-            z-index: 1;
-            user-select: none; /* Чтобы эмодзи нельзя было выделить мышкой */
-        }
+        /* Ракеты-эмодзи */
+        .rocket { position: absolute; opacity: 0.6; z-index: 1; user-select: none; }
+        .rocket-1 { bottom: -50px; left: -50px; font-size: 35px; filter: blur(2px) drop-shadow(0 0 15px var(--purple-glow)); animation: fly-1 15s linear infinite; }
+        .rocket-2 { top: 30%; right: -50px; font-size: 25px; filter: blur(4px) drop-shadow(0 0 10px var(--purple-light)); animation: fly-2 25s linear infinite 5s; }
+        .rocket-3 { top: -50px; left: 40%; font-size: 45px; filter: blur(1.5px) drop-shadow(0 0 20px var(--purple-glow)); animation: fly-3 18s linear infinite 10s; }
 
-        /* Ракета 1: Летит снизу-слева вправо-вверх (↗️) */
-        .rocket-1 {
-            bottom: -50px; left: -50px;
-            font-size: 35px; /* Размер эмодзи */
-            filter: blur(2px) drop-shadow(0 0 15px var(--purple-glow));
-            animation: fly-1 15s linear infinite;
-        }
+        @keyframes fly-1 { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0; } 10% { opacity: 0.8; } 100% { transform: translate(120vw, -120vh) rotate(0deg); opacity: 0; } }
+        @keyframes fly-2 { 0% { transform: translate(0, 0) rotate(-20deg); opacity: 0; } 10% { opacity: 0.5; } 100% { transform: translate(-120vw, 120vh) rotate(-20deg); opacity: 0; } }
+        @keyframes fly-3 { 0% { transform: translate(0, 0) rotate(90deg); opacity: 0; } 10% { opacity: 0.6; } 100% { transform: translate(60vw, 120vh) rotate(90deg); opacity: 0; } }
 
-        /* Ракета 2: НЛО летит справа-налево вниз (↙️) */
-        .rocket-2 {
-            top: 30%; right: -50px;
-            font-size: 25px;
-            filter: blur(4px) drop-shadow(0 0 10px var(--purple-light));
-            animation: fly-2 25s linear infinite 5s;
-        }
-
-        /* Ракета 3: Летит сверху-вниз вправо (↘️) */
-        .rocket-3 {
-            top: -50px; left: 40%;
-            font-size: 45px;
-            filter: blur(1.5px) drop-shadow(0 0 20px var(--purple-glow));
-            animation: fly-3 18s linear infinite 10s;
-        }
-
-        /* Анимации с правильным поворотом (rotate) для эмодзи */
-        @keyframes fly-1 {
-            /* Эмодзи 🚀 уже смотрит вправо-вверх (↗️), поэтому поворот 0deg */
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { transform: translate(120vw, -120vh) rotate(0deg); opacity: 0; }
-        }
-        @keyframes fly-2 {
-            /* НЛО летит влево-вниз (↙️). Поворачиваем слегка для динамики */
-            0% { transform: translate(0, 0) rotate(-20deg); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translate(-120vw, 120vh) rotate(-20deg); opacity: 0; }
-        }
-        @keyframes fly-3 {
-            /* Ракета летит вправо-вниз (↘️). Поворачиваем эмодзи на 90 градусов по часовой */
-            0% { transform: translate(0, 0) rotate(90deg); opacity: 0; }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.6; }
-            100% { transform: translate(60vw, 120vh) rotate(90deg); opacity: 0; }
-        }
-        /* ========================================= */
-
-        /* Каркас интерфейса */
-        .sidebar, .main-content { position: relative; z-index: 10; }
-        .sidebar { width: 260px; background-color: var(--surface-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 30px 0; display: flex; flex-direction: column; border-right: 1px solid rgba(255, 255, 255, 0.05); }
-        .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
+        /* Структура панелей */
+        .sidebar { width: 260px; background-color: var(--surface-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 30px 0; display: flex; flex-direction: column; border-right: 1px solid rgba(255, 255, 255, 0.05); z-index: 10; }
+        .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; position: relative; }
+        
         .header { display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 15px 30px; border-radius: var(--border-radius); margin-bottom: 30px; border: 1px solid rgba(255, 255, 255, 0.05); }
 
-        .card { background-color: var(--surface-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: var(--border-radius); padding: 30px; position: relative; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(177, 66, 245, 0.05); }
-        .card::before { content: ''; position: absolute; top: -1px; left: 10%; right: 10%; height: 2px; background: var(--purple-glow); box-shadow: 0 0 15px 2px var(--purple-glow); opacity: 0.6; border-radius: 50%; }
+        .card { background-color: var(--surface-color); backdrop-filter: blur(12px); border-radius: var(--border-radius); padding: 30px; position: relative; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(177, 66, 245, 0.05); }
+        .card::before { content: ''; position: absolute; top: -1px; left: 10%; right: 10%; height: 2px; background: var(--purple-glow); box-shadow: 0 0 15px 2px var(--purple-glow); opacity: 0.6; }
 
-        /* Поиск и выпадающее меню */
+        /* Поиск */
         .search-container { position: relative; }
-        .search-bar { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(177, 66, 245, 0.2); border-radius: 8px; width: 250px; height: 40px; padding: 0 15px; color: var(--text-main); outline: none; transition: all 0.3s ease; font-size: 14px; }
-        .search-bar:focus { border-color: var(--purple-glow); box-shadow: 0 0 15px rgba(177, 66, 245, 0.2); background: rgba(0, 0, 0, 0.5); }
+        .search-bar { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(177, 66, 245, 0.3); border-radius: 8px; width: 250px; height: 40px; padding: 0 15px; color: #fff; outline: none; transition: 0.3s; }
+        .search-bar:focus { border-color: var(--purple-glow); box-shadow: 0 0 15px rgba(177, 66, 245, 0.2); }
 
-        .search-results-dropdown { position: absolute; top: 50px; right: 0; width: 100%; background-color: rgba(22, 22, 28, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(177, 66, 245, 0.4); border-radius: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); display: none; flex-direction: column; max-height: 300px; overflow-y: auto; z-index: 100; }
+        .search-results-dropdown { position: absolute; top: 50px; right: 0; width: 100%; background: rgba(20, 20, 25, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--purple-glow); border-radius: 8px; display: none; flex-direction: column; max-height: 300px; overflow-y: auto; z-index: 100; }
         .search-results-dropdown.active { display: flex; }
-        .search-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s ease; }
-        .search-item:hover { background-color: rgba(177, 66, 245, 0.2); }
-        .player-head { width: 32px; height: 32px; border-radius: 4px; box-shadow: 0 0 5px rgba(177, 66, 245, 0.3); }
+        .search-item { padding: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .search-item:hover { background: rgba(177, 66, 245, 0.2); }
+        .player-head { width: 32px; height: 32px; border-radius: 4px; }
 
-        .search-results-dropdown::-webkit-scrollbar { width: 6px; }
-        .search-results-dropdown::-webkit-scrollbar-track { background: transparent; }
-        .search-results-dropdown::-webkit-scrollbar-thumb { background: rgba(177, 66, 245, 0.3); border-radius: 10px; }
-
-        /* Скелетоны и графика */
-        .skeleton { background: rgba(255, 255, 255, 0.04); border-radius: 6px; display: inline-block; position: relative; overflow: hidden; border: 1px solid rgba(177, 66, 245, 0.1); }
-        .skeleton::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(177, 66, 245, 0.2), transparent); animation: shimmer 2.5s infinite ease-in-out; }
-        @keyframes shimmer { 100% { left: 200%; } }
-        .sk-logo { width: 140px; height: 32px; margin: 0 auto 40px auto; display: block; border-radius: 8px; }
-        .sk-nav { width: 110px; height: 16px; }
-        .sk-nav-short { width: 80px; height: 16px; }
-        .sk-header-link { width: 60px; height: 14px; margin-right: 20px; border-radius: 4px; }
-        .sk-title-large { width: 120px; height: 36px; margin-bottom: 10px; border-radius: 8px; }
-        .sk-title-med { width: 90px; height: 28px; margin-bottom: 8px; border-radius: 6px; }
-        .sk-subtitle { width: 150px; height: 12px; margin-bottom: 20px; border-radius: 4px; }
-        .sk-subtitle-short { width: 70px; height: 12px; margin-bottom: 20px; border-radius: 4px; }
-
-        .nav-menu { list-style: none; }
-        .nav-item { padding: 15px 30px; display: flex; align-items: center; text-decoration: none; transition: all 0.3s ease; position: relative; cursor: pointer;}
-        .nav-item:hover { background-color: rgba(177, 66, 245, 0.1); }
-        .nav-item.active { background: linear-gradient(90deg, rgba(177,66,245,0.1) 0%, transparent 100%); }
-        .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background-color: var(--purple-light); box-shadow: 0 0 10px var(--purple-light); }
-        .header-links { display: flex; align-items: center; }
-
+        /* Сетки и элементы */
         .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         .full-width { grid-column: 1 / -1; }
+        .nav-menu { list-style: none; }
+        .nav-item { padding: 12px 30px; display: flex; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 14px; }
+        .nav-item.active { color: #fff; background: linear-gradient(90deg, rgba(177,66,245,0.1) 0%, transparent 100%); border-left: 4px solid var(--purple-light); }
 
-        .api-terminal { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; color: var(--purple-light); font-size: 13px; font-family: monospace; overflow-x: auto; max-height: 250px; border: 1px solid rgba(177,66,245,0.3); margin-top: 15px; }
-        .api-terminal::-webkit-scrollbar { height: 6px; width: 6px;}
-        .api-terminal::-webkit-scrollbar-thumb { background: var(--purple-glow); border-radius: 10px; }
+        /* Скелетоны */
+        .skeleton { background: rgba(255, 255, 255, 0.05); border-radius: 6px; position: relative; overflow: hidden; }
+        .skeleton::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(177, 66, 245, 0.1), transparent); animation: shimmer 2s infinite; }
+        @keyframes shimmer { 100% { left: 100%; } }
+        
+        .sk-logo { width: 160px; height: 30px; margin: 0 auto 40px auto; }
+        .sk-nav { width: 100px; height: 15px; }
 
-        .btn-return { margin-top: 20px; background: rgba(177,66,245,0.2); border: 1px solid var(--purple-glow); color: #fff; padding: 10px 20px; border-radius: 6px; cursor: pointer; transition: all 0.3s; font-family: 'Orbitron', sans-serif;}
-        .btn-return:hover { background: var(--purple-glow); box-shadow: 0 0 15px var(--purple-glow); }
+        .api-terminal { background: #000; padding: 15px; border-radius: 8px; color: var(--purple-light); font-family: monospace; font-size: 12px; height: 180px; overflow: auto; border: 1px solid #222; margin-top: 15px; }
+        .btn-return { background: var(--purple-glow); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 15px; transition: 0.3s; width: 100%; }
+        .btn-return:hover { box-shadow: 0 0 15px var(--purple-glow); }
     </style>
 </head>
 <body>
 
-<!-- Фон: Звезды и ЭМОДЗИ РАКЕТЫ -->
 <div class="background-fx">
     <div class="stars-small"></div>
     <div class="stars-large"></div>
-
-    <!-- Заменили SVG на Эмодзи -->
     <div class="rocket rocket-1">🚀</div>
     <div class="rocket rocket-2">🛸</div>
     <div class="rocket rocket-3">🚀</div>
 </div>
 
 <aside class="sidebar">
-    <div class="skeleton sk-logo"></div>
+    <!-- Добавлен ID main-logo -->
+    <div id="main-logo" class="skeleton sk-logo"></div>
     <ul class="nav-menu">
-        <li><a href="#" class="nav-item active"><div class="skeleton sk-nav"></div></a></li>
-        <li><a href="#" class="nav-item"><div class="skeleton sk-nav-short"></div></a></li>
-        <li><a href="#" class="nav-item"><div class="skeleton sk-nav"></div></a></li>
+        <li><div class="nav-item active"><div class="skeleton sk-nav"></div></div></li>
+        <li><div class="nav-item"><div class="skeleton sk-nav" style="width:70px"></div></div></li>
+        <li><div class="nav-item"><div class="skeleton sk-nav"></div></div></li>
     </ul>
 </aside>
 
 <main class="main-content">
     <header class="header">
-        <div class="header-links">
-            <div class="skeleton sk-header-link" style="border-bottom: 2px solid var(--purple-glow); border-radius: 2px 2px 0 0;"></div>
-            <div class="skeleton sk-header-link"></div>
-        </div>
-
+        <div style="font-size: 12px; opacity: 0.5;">LoliLand Monitoring System</div>
         <div class="search-container">
             <input type="text" id="playerInput" class="search-bar" placeholder="🔍 Найти игрока..." autocomplete="off">
             <div id="searchResults" class="search-results-dropdown"></div>
         </div>
     </header>
 
-    <div class="dashboard-grid">
+    <div id="content" class="dashboard-grid">
         <div class="card" id="card1"></div>
         <div class="card" id="card2"></div>
         <div class="card full-width" id="card3"></div>
     </div>
 </main>
+
 <script src="app.js"></script>
 </body>
 </html>
