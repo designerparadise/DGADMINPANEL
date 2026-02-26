@@ -23,31 +23,53 @@ async function request(endpoint) {
 }
 
 // ==========================================
-// АВАТАРЫ ЧЕРЕЗ BLOB
-// Используем fetch() вместо <img src="..."> напрямую —
-// иначе loliland.ru шлёт Clear-Site-Data и браузер
-// перезагружает страницу → SyntaxError
+// АВАТАРЫ
+// avatarOrSkin.id + extension → прямая ссылка на CDN
 // ==========================================
 const avatarCache = {};
-async function getAvatar(login) {
-    if (avatarCache[login]) return avatarCache[login];
-    try {
-        const res = await fetch(PROXY + encodeURIComponent(`https://loliland.ru/avatar/${login}/64`));
-        if (!res.ok) return FALLBACK_AVATAR;
-        const ct = res.headers.get('content-type') || '';
-        if (!ct.startsWith('image/')) return FALLBACK_AVATAR;
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        avatarCache[login] = url;
-        return url;
-    } catch {
-        return FALLBACK_AVATAR;
+
+function buildAvatarUrls(login, avatarOrSkin) {
+    const urls = [];
+    if (avatarOrSkin?.id) {
+        const ext = avatarOrSkin.extension || 'png';
+        const id = avatarOrSkin.id;
+        // Варианты CDN путей — один из них должен сработать
+        urls.push(`https://loliland.ru/uploads/avatars/${id}.${ext}`);
+        urls.push(`https://loliland.ru/static/avatars/${id}.${ext}`);
+        urls.push(`https://loliland.ru/api/avatar/${id}`);
+        urls.push(`https://loliland.ru/cdn/avatars/${id}.${ext}`);
     }
+    urls.push(`https://loliland.ru/avatar/${login}/64`);
+    urls.push(`https://loliland.ru/skin/${login}/avatar`);
+    return urls;
 }
 
-function setAvatar(imgEl, login) {
+async function getAvatar(login, avatarOrSkin) {
+    const key = login;
+    if (avatarCache[key]) return avatarCache[key];
+
+    const urlsToTry = buildAvatarUrls(login, avatarOrSkin);
+
+    for (const src of urlsToTry) {
+        try {
+            const res = await fetch(PROXY + encodeURIComponent(src));
+            if (!res.ok) continue;
+            const ct = res.headers.get('content-type') || '';
+            if (!ct.startsWith('image/')) continue;
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            avatarCache[key] = url;
+            return url;
+        } catch {
+            continue;
+        }
+    }
+    return FALLBACK_AVATAR;
+}
+
+function setAvatar(imgEl, login, avatarOrSkin) {
     imgEl.src = FALLBACK_AVATAR;
-    getAvatar(login).then(url => { imgEl.src = url; });
+    getAvatar(login, avatarOrSkin).then(url => { imgEl.src = url; });
 }
 
 // ==========================================
@@ -160,8 +182,8 @@ input.addEventListener('input', () => {
                     <div style="font-size:10px;color:${roleColor};">${roleLabel}</div>
                 </div>
             `;
-            setAvatar(item.querySelector('img'), login);
-            item.onclick = () => loadPlayerProfile(login, uuid);
+            setAvatar(item.querySelector('img'), login, p.avatarOrSkin);
+            item.onclick = () => loadPlayerProfile(login, uuid, p.avatarOrSkin);
             drop.appendChild(item);
         }
     }, 400);
@@ -170,7 +192,7 @@ input.addEventListener('input', () => {
 // ==========================================
 // 3. ПРОФИЛЬ ИГРОКА
 // ==========================================
-async function loadPlayerProfile(login, uuid) {
+async function loadPlayerProfile(login, uuid, avatarOrSkin) {
     if (!uuid) return;
     currentMode = 'profile';
     drop.classList.remove('active');
@@ -196,7 +218,7 @@ async function loadPlayerProfile(login, uuid) {
             </div>
         </div>
     `);
-    setAvatar(document.getElementById('profileAvatar'), login);
+    setAvatar(document.getElementById('profileAvatar'), login, avatarOrSkin);
 
     render('card2', `
         <div style="font-size:14px;font-weight:600;margin-bottom:15px;opacity:0.8;">⏱ Активность</div>
